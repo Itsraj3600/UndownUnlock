@@ -84,12 +84,12 @@ def set_window_not_on_top(hwnd):
 def cycle_right(event = None):
     global current_overlay_index
     current_overlay_index += 1
-    cycle_windows_and_set_top()
+    cycle_windows_and_set_top(direction="right")
 
 def cycle_left(event = None):
     global current_overlay_index
     current_overlay_index -= 1
-    cycle_windows_and_set_top()
+    cycle_windows_and_set_top(direction="left")
 
 def get_all_app_windows():
     windows = pwc.getAllWindows()
@@ -103,10 +103,11 @@ def is_exe_window(hwnd):
         _, pid = win32process.GetWindowThreadProcessId(hwnd)
         process = psutil.Process(pid)
         return process.exe().endswith('.exe')
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+    except Exception as e:
+        print(e)
         return False
 
-def cycle_windows_and_set_top():
+def cycle_windows_and_set_top(direction="right"):
     try:
         global current_overlay_index
         windows = get_all_app_windows()
@@ -125,15 +126,16 @@ def cycle_windows_and_set_top():
             try:
                 next_window.activate()
             except Exception as e:
-                if e.__class__.__name__ == 'PyGetWindowException':
-                    pass
-                else:
-                    raise e
+                print(e)
+                cycle_windows_and_set_top()
 
             print("Switching to", next_window.title)
             set_window_on_top(hwnd)
         else:
-            current_overlay_index += 1
+            if direction == "right":
+                current_overlay_index += 1
+            else:
+                current_overlay_index -= 1
             cycle_windows_and_set_top()
     except Exception as e:
         print(e)
